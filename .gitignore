@@ -1,0 +1,9 @@
+# Build output
+/build/
+
+# Editor/tooling caches and local config
+/.cache/
+.claude/
+
+# OS cruft
+.DS_Store
