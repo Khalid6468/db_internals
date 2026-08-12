@@ -1,0 +1,23 @@
+include/tinydb/replacer.h
+  81eb8d85892b5fc8 18-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "fe2a23f670be048477e021e765949d3a54acbec8",
+  "prompts": {
+    "81eb8d85892b5fc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "843f6081-72c8-4686-9712-9d4ebd119a7f",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Khalid <khalimohammed5@gmail.com>",
+      "messages": [],
+      "total_additions": 8,
+      "total_deletions": 0,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
