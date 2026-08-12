@@ -10,6 +10,12 @@
 
 namespace tinydb {
 
+    // O_DIRECT requires the buffer address, transfer length, and file offset of
+    // every request to be a multiple of the underlying block device's alignment
+    // requirement. 4096 covers both classic 512-byte sectors and modern 4Kn
+    // drives, and matches Page's own alignas(4096) buffer.
+    constexpr size_t DIRECT_IO_ALIGNMENT = 4096;
+
     DirectIOBackend::DirectIOBackend(const std::string& path) : db_file_path_(path) {
         #ifdef __APPLE__
             // macOS does not have O_DIRECT; open the file normally
@@ -45,18 +51,31 @@ namespace tinydb {
 
         // retry incase of EINTR due to interrupt signals
         while (total < PAGE_SIZE) {
-            //assumes O_DIRECT transfers complete in full or fail, per local block device behavior
             ssize_t n = pread(fd_, page.raw() + total, PAGE_SIZE - total, offset + total);
             if (n < 0) {
                 if (errno == EINTR) continue;   // no progress lost, retry the whole remaining call
-                
-                throw std::runtime_error("DirectIOBackend::ReadPage - Failed to read page via pread " 
+
+                throw std::runtime_error("DirectIOBackend::ReadPage - Failed to read page via pread "
                     + std::string(std::strerror(errno)));   // a real error
             }
             if (n == 0) {
                 throw std::runtime_error("DirectIOBackend::ReadPage - EOF before reading " + std::to_string(PAGE_SIZE) + " bytes");   // EOF before PAGE_SIZE bytes -- genuine corruption/short file
             }
             total += static_cast<size_t>(n);
+
+            // We assume a single-page O_DIRECT transfer completes in full or fails
+            // outright. If a genuine partial completion ever leaves `total`
+            // misaligned, the next iteration's request would itself violate
+            // O_DIRECT's alignment rules -- fail loudly here instead of letting
+            // the kernel reject the retry with an opaque EINVAL.
+            if (total < PAGE_SIZE && total % DIRECT_IO_ALIGNMENT != 0) {
+                throw std::runtime_error(
+                    "DirectIOBackend::ReadPage - partial O_DIRECT read left an "
+                    "unaligned offset (" + std::to_string(total) + " of " +
+                    std::to_string(PAGE_SIZE) + " bytes) at page " +
+                    std::to_string(page_id) + " -- aborting rather than retry "
+                    "with a misaligned request");
+            }
         }
     }
     
@@ -66,19 +85,30 @@ namespace tinydb {
         size_t total = 0;
         // retry incase of EINTR due to interrupt signals
         while (total < PAGE_SIZE) {
-            //assumes O_DIRECT transfers complete in full or fail, per local block device behavior
             ssize_t n = pwrite(fd_, page.raw() + total, PAGE_SIZE - total, offset + total);
             if (n < 0) {
                 if (errno == EINTR) continue;   // no progress lost, retry the whole remaining call
-                
-                throw std::runtime_error("DirectIOBackend::WritePage - Failed to write page via pwrite " 
+
+                throw std::runtime_error("DirectIOBackend::WritePage - Failed to write page via pwrite "
                     + std::string(std::strerror(errno)));   // a real error
             }
             if (n == 0) {
-                throw std::runtime_error("DirectIOBackend::WritePage - EOF before writing " + std::to_string(PAGE_SIZE) + " bytes");   
+                throw std::runtime_error("DirectIOBackend::WritePage - EOF before writing " + std::to_string(PAGE_SIZE) + " bytes");
                 // EOF before PAGE_SIZE bytes -- genuine corruption/short file
             }
             total += static_cast<size_t>(n);
+
+            // Same reasoning as ReadPage: a genuine partial O_DIRECT completion
+            // that leaves `total` misaligned would make the retry itself invalid
+            // -- fail loudly here instead of an opaque EINVAL from the kernel.
+            if (total < PAGE_SIZE && total % DIRECT_IO_ALIGNMENT != 0) {
+                throw std::runtime_error(
+                    "DirectIOBackend::WritePage - partial O_DIRECT write left an "
+                    "unaligned offset (" + std::to_string(total) + " of " +
+                    std::to_string(PAGE_SIZE) + " bytes) at page " +
+                    std::to_string(page_id) + " -- aborting rather than retry "
+                    "with a misaligned request");
+            }
         }
     }
     
