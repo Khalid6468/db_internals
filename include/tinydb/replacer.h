@@ -26,6 +26,18 @@ namespace tinydb {
             virtual void Pin(frame_id_t frame_id);
             virtual void UnPin(frame_id_t frame_id);
             virtual bool Victim(frame_id_t *frame_id);
+
+            // Unconditionally stops tracking frame_id: clears it out of both the
+            // young/old segments and the evictable set, regardless of its current
+            // evictable status. Unlike Victim, the caller picks which frame goes
+            // away -- use this when a frame's underlying page is being retired
+            // out of band (e.g. the page was deleted) rather than through normal
+            // replacement. As with Pin/UnPin, this trusts the caller to only call
+            // it once the frame is actually safe to forget (not pinned); it has
+            // no way to verify that itself. No-op, returning false, if frame_id
+            // isn't currently tracked.
+            virtual bool Remove(frame_id_t frame_id);
+
             virtual size_t Size() const;
 
         private:

@@ -68,6 +68,27 @@ namespace tinydb {
 
     }
 
+    bool Replacer::Remove(frame_id_t frame_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        auto old_it = old_map_.find(frame_id);
+        if (old_it != old_map_.end()) {
+            old_.erase(old_it->second);
+            old_map_.erase(old_it);
+            old_entry_count_.erase(frame_id);
+            evictable_.erase(frame_id);
+            return true;
+        }
+        auto young_it = young_map_.find(frame_id);
+        if (young_it != young_map_.end()) {
+            young_.erase(young_it->second);
+            young_map_.erase(young_it);
+            evictable_.erase(frame_id);
+            return true;
+        }
+        return false;
+    }
+
     size_t Replacer::Size() const {
         std::lock_guard<std::mutex> lock(mutex_);
         return evictable_.size();
