@@ -23,6 +23,7 @@ add_library(tinydb_core
     src/io_backend_direct.cpp
     src/io_backend_factory.cpp
     src/replacer.cpp
+    src/buffer_pool_management.cpp
 )
 
 # TODO: add when test/bench sources exist
