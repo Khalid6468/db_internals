@@ -1,25 +1,25 @@
-#include "tinydb/replacer.h"
+#include "tinydb/approx_lruk_replacer.h"
 #include <gtest/gtest.h>
 
 using namespace tinydb;
 
-TEST(Replacer, NewReplacerHasNoEvictableFrames) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, NewApproxLRUKReplacerHasNoEvictableFrames) {
+    ApproxLRUKReplacer r;
     EXPECT_EQ(r.Size(), 0u);
     frame_id_t victim;
     EXPECT_FALSE(r.Victim(&victim));
 }
 
-TEST(Replacer, RecordAccessThenUnPinMakesFrameEvictable) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, RecordAccessThenUnPinMakesFrameEvictable) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     EXPECT_EQ(r.Size(), 0u); // recorded but not yet unpinned
     r.UnPin(1);
     EXPECT_EQ(r.Size(), 1u);
 }
 
-TEST(Replacer, PinRemovesFrameFromEvictableSet) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, PinRemovesFrameFromEvictableSet) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.UnPin(1);
     ASSERT_EQ(r.Size(), 1u);
@@ -27,14 +27,14 @@ TEST(Replacer, PinRemovesFrameFromEvictableSet) {
     EXPECT_EQ(r.Size(), 0u);
 }
 
-TEST(Replacer, PinOnUntrackedFrameIsANoOp) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, PinOnUntrackedFrameIsANoOp) {
+    ApproxLRUKReplacer r;
     r.Pin(42); // never recorded/unpinned -- must not throw or corrupt state
     EXPECT_EQ(r.Size(), 0u);
 }
 
-TEST(Replacer, VictimSkipsPinnedFrameAndPicksNextEvictableOne) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, VictimSkipsPinnedFrameAndPicksNextEvictableOne) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.RecordAccess(2);
     r.RecordAccess(3);
@@ -48,8 +48,8 @@ TEST(Replacer, VictimSkipsPinnedFrameAndPicksNextEvictableOne) {
     EXPECT_EQ(victim, 2u);
 }
 
-TEST(Replacer, VictimReturnsFalseWhenEverythingIsPinned) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, VictimReturnsFalseWhenEverythingIsPinned) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.RecordAccess(2);
     // never unpinned -- nothing evictable
@@ -57,8 +57,8 @@ TEST(Replacer, VictimReturnsFalseWhenEverythingIsPinned) {
     EXPECT_FALSE(r.Victim(&victim));
 }
 
-TEST(Replacer, VictimStopsTrackingTheEvictedFrame) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, VictimStopsTrackingTheEvictedFrame) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.UnPin(1);
     ASSERT_EQ(r.Size(), 1u);
@@ -73,8 +73,8 @@ TEST(Replacer, VictimStopsTrackingTheEvictedFrame) {
     EXPECT_FALSE(r.Victim(&second));
 }
 
-TEST(Replacer, EvictedFrameIdCanBeReusedAsIfBrandNew) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, EvictedFrameIdCanBeReusedAsIfBrandNew) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.UnPin(1);
     frame_id_t victim;
@@ -90,11 +90,11 @@ TEST(Replacer, EvictedFrameIdCanBeReusedAsIfBrandNew) {
     EXPECT_EQ(victim2, 1u);
 }
 
-TEST(Replacer, SubThresholdRetouchDoesNotReorderWithinOldSegment) {
+TEST(ApproxLRUKReplacer, SubThresholdRetouchDoesNotReorderWithinOldSegment) {
     // Default threshold (200) is never crossed here, so frame 1 stays in old_'s
     // FIFO order regardless of how many times it's re-touched -- this is the
     // deliberate scan-resistance behavior, not a bug.
-    Replacer r; // default threshold
+    ApproxLRUKReplacer r; // default threshold
     r.RecordAccess(1);
     r.RecordAccess(2);
     r.RecordAccess(1); // re-touch, but far below the promotion threshold
@@ -107,8 +107,8 @@ TEST(Replacer, SubThresholdRetouchDoesNotReorderWithinOldSegment) {
     EXPECT_EQ(victim, 1u); // still LRU-most despite repeated re-touching
 }
 
-TEST(Replacer, PromotionToYoungAfterThresholdAndRetouch) {
-    Replacer r(1); // promote as soon as a single global access has elapsed
+TEST(ApproxLRUKReplacer, PromotionToYoungAfterThresholdAndRetouch) {
+    ApproxLRUKReplacer r(1); // promote as soon as a single global access has elapsed
     r.RecordAccess(1); // old_entry_count_[1] = 1
     r.RecordAccess(2); // global_access_count_ = 2, delta for 1 is now 1 >= threshold
     r.RecordAccess(1); // re-touch -- should promote frame 1 out of old_ into young_
@@ -123,8 +123,8 @@ TEST(Replacer, PromotionToYoungAfterThresholdAndRetouch) {
     EXPECT_EQ(victim, 2u);
 }
 
-TEST(Replacer, RemoveFromOldSegmentStopsTracking) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, RemoveFromOldSegmentStopsTracking) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.UnPin(1);
     ASSERT_EQ(r.Size(), 1u);
@@ -135,8 +135,8 @@ TEST(Replacer, RemoveFromOldSegmentStopsTracking) {
     EXPECT_FALSE(r.Victim(&victim));
 }
 
-TEST(Replacer, RemoveFromYoungSegmentStopsTracking) {
-    Replacer r(1);
+TEST(ApproxLRUKReplacer, RemoveFromYoungSegmentStopsTracking) {
+    ApproxLRUKReplacer r(1);
     r.RecordAccess(5);
     r.RecordAccess(6); // bump global count past threshold
     r.RecordAccess(5); // promotes 5 into young_
@@ -147,13 +147,13 @@ TEST(Replacer, RemoveFromYoungSegmentStopsTracking) {
     EXPECT_EQ(r.Size(), 0u);
 }
 
-TEST(Replacer, RemoveOnUntrackedFrameIsANoOpReturningFalse) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, RemoveOnUntrackedFrameIsANoOpReturningFalse) {
+    ApproxLRUKReplacer r;
     EXPECT_FALSE(r.Remove(999));
 }
 
-TEST(Replacer, RemovedFrameIdStartsFreshOnReuseNoStalePromotionState) {
-    Replacer r(1);
+TEST(ApproxLRUKReplacer, RemovedFrameIdStartsFreshOnReuseNoStalePromotionState) {
+    ApproxLRUKReplacer r(1);
     r.RecordAccess(1);
     r.RecordAccess(2);
     r.RecordAccess(1); // promotes 1 into young_
@@ -190,8 +190,8 @@ TEST(Replacer, RemovedFrameIdStartsFreshOnReuseNoStalePromotionState) {
     EXPECT_EQ(victim, 9u);
 }
 
-TEST(Replacer, RemovingAMiddleEntryLeavesRestOfLruOrderIntact) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, RemovingAMiddleEntryLeavesRestOfLruOrderIntact) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(10);
     r.RecordAccess(20);
     r.RecordAccess(30);
@@ -207,8 +207,8 @@ TEST(Replacer, RemovingAMiddleEntryLeavesRestOfLruOrderIntact) {
     EXPECT_EQ(victim, 10u); // still the LRU-most of the remaining entries
 }
 
-TEST(Replacer, MostRecentlyTouchedFrameInOldIsEvictedLast) {
-    Replacer r;
+TEST(ApproxLRUKReplacer, MostRecentlyTouchedFrameInOldIsEvictedLast) {
+    ApproxLRUKReplacer r;
     r.RecordAccess(1);
     r.RecordAccess(2);
     r.RecordAccess(3);

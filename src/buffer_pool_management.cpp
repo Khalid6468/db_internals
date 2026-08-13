@@ -8,9 +8,9 @@
 
 namespace tinydb {
 
-    BufferPoolManager::BufferPoolManager(const std::string& db_file_path, IOStrategy strategy, size_t pool_size, size_t promotion_threshold)
+    BufferPoolManager::BufferPoolManager(const std::string& db_file_path, IOStrategy strategy, size_t pool_size, std::unique_ptr<Replacer> replacer)
     : disk_manager_(db_file_path, strategy) {
-        replacer_ = std::make_unique<Replacer>(promotion_threshold);
+        replacer_ = std::move(replacer);
         pool_size_ = pool_size;
         pages_ = std::vector<Page>(pool_size_);
         pin_count_ = std::vector<size_t>(pool_size_);

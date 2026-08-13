@@ -22,7 +22,7 @@ add_library(tinydb_core
     src/io_backend_buffered.cpp
     src/io_backend_direct.cpp
     src/io_backend_factory.cpp
-    src/replacer.cpp
+    src/approx_lruk_replacer.cpp
     src/buffer_pool_management.cpp
 )
 
@@ -52,7 +52,7 @@ endfunction()
 
 add_tinydb_test(byte_order_test)
 add_tinydb_test(page_test)
-add_tinydb_test(replacer_test)
+add_tinydb_test(approx_lruk_replacer_test)
 add_tinydb_test(io_backend_test)
 add_tinydb_test(disk_manager_test)
 add_tinydb_test(buffer_pool_manager_test)

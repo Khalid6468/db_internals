@@ -1,5 +1,6 @@
 #include "tinydb/buffer_pool_manager.h"
 #include "tinydb/disk_manager.h"
+#include "tinydb/approx_lruk_replacer.h"
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <cstring>
@@ -21,7 +22,8 @@ protected:
     }
 
     std::unique_ptr<BufferPoolManager> MakeBpm(size_t pool_size, size_t promotion_threshold = 200) {
-        return std::make_unique<BufferPoolManager>(path_, IOStrategy::K_BUFFERED, pool_size, promotion_threshold);
+        return std::make_unique<BufferPoolManager>(path_, IOStrategy::K_BUFFERED, pool_size,
+            std::make_unique<ApproxLRUKReplacer>(promotion_threshold));
     }
 
     std::string path_;
