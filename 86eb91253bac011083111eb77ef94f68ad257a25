@@ -1,0 +1,37 @@
+CMakeLists.txt
+  81eb8d85892b5fc8 25,55
+src/buffer_pool_management.cpp
+  81eb8d85892b5fc8 11,13
+include/tinydb/replacer.h
+  81eb8d85892b5fc8 3,13-14,23-24,26,28-29,37,39
+tests/buffer_pool_manager_test.cpp
+  81eb8d85892b5fc8 3,25-26
+tests/approx_lruk_replacer_test.cpp
+  81eb8d85892b5fc8 1
+include/tinydb/buffer_pool_manager.h
+  81eb8d85892b5fc8 27
+src/approx_lruk_replacer.cpp
+  81eb8d85892b5fc8 1-96
+include/tinydb/approx_lruk_replacer.h
+  81eb8d85892b5fc8 1-10,12-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.23",
+  "base_commit_sha": "86eb91253bac011083111eb77ef94f68ad257a25",
+  "prompts": {
+    "81eb8d85892b5fc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "843f6081-72c8-4686-9712-9d4ebd119a7f",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Khalid <khalimohammed5@gmail.com>",
+      "messages": [],
+      "total_additions": 165,
+      "total_deletions": 33,
+      "accepted_lines": 154,
+      "overriden_lines": 1
+    }
+  }
+}
