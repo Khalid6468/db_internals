@@ -1,8 +1,8 @@
-#include "tinydb/replacer.h"
+#include "tinydb/approx_lruk_replacer.h"
 
 namespace tinydb {
 
-    void Replacer::RecordAccess(frame_id_t frame_id) {
+    void ApproxLRUKReplacer::RecordAccess(frame_id_t frame_id) {
         std::lock_guard<std::mutex> lock(mutex_);
         global_access_count_++;
         if(!young_map_.contains(frame_id) && !old_map_.contains(frame_id)) {
@@ -27,17 +27,17 @@ namespace tinydb {
         }
     }
 
-    void Replacer::Pin(frame_id_t frame_id) {
+    void ApproxLRUKReplacer::Pin(frame_id_t frame_id) {
         std::lock_guard<std::mutex> lock(mutex_);
         evictable_.erase(frame_id);
     }
 
-    void Replacer::UnPin(frame_id_t frame_id) {
+    void ApproxLRUKReplacer::UnPin(frame_id_t frame_id) {
         std::lock_guard<std::mutex> lock(mutex_);
         evictable_.insert(frame_id);
     }
 
-    bool Replacer::Victim(frame_id_t* frame_id) {
+    bool ApproxLRUKReplacer::Victim(frame_id_t* frame_id) {
         std::lock_guard<std::mutex> lock(mutex_);
         std::list<frame_id_t>::reverse_iterator it = old_.rbegin();
         while(it != old_.rend() && !evictable_.contains(*it)) {
@@ -68,7 +68,7 @@ namespace tinydb {
 
     }
 
-    bool Replacer::Remove(frame_id_t frame_id) {
+    bool ApproxLRUKReplacer::Remove(frame_id_t frame_id) {
         std::lock_guard<std::mutex> lock(mutex_);
 
         auto old_it = old_map_.find(frame_id);
@@ -89,7 +89,7 @@ namespace tinydb {
         return false;
     }
 
-    size_t Replacer::Size() const {
+    size_t ApproxLRUKReplacer::Size() const {
         std::lock_guard<std::mutex> lock(mutex_);
         return evictable_.size();
     }

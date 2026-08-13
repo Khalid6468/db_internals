@@ -24,7 +24,7 @@ namespace tinydb {
             size_t pool_size_;
         
         public:
-            explicit BufferPoolManager(const std::string& db_file_path, IOStrategy strategy, size_t pool_size, size_t promotion_threshold);
+            explicit BufferPoolManager(const std::string& db_file_path, IOStrategy strategy, size_t pool_size, std::unique_ptr<Replacer> replacer);
             BufferPoolManager& operator=(const BufferPoolManager&) = delete;
             Page* FetchPage(page_id_t page_id);
             bool UnPinPage(page_id_t page_id, bool is_dirty);
