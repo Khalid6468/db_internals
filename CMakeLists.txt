@@ -25,6 +25,7 @@ add_library(tinydb_core
     src/approx_lruk_replacer.cpp
     src/buffer_pool_management.cpp
     src/storage_manager.cpp
+    src/table_page.cpp
 )
 
 # TODO: add when a bench source exists
@@ -58,3 +59,4 @@ add_tinydb_test(io_backend_test)
 add_tinydb_test(disk_manager_test)
 add_tinydb_test(buffer_pool_manager_test)
 add_tinydb_test(storage_manager_test)
+add_tinydb_test(table_page_test)
