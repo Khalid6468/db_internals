@@ -4,7 +4,6 @@
 #include "tinydb/page.h"
 #include "tinydb/replacer.h"
 #include "tinydb/storage_manager.h"
-#include "tinydb/disk_manager.h"
 #include <mutex>
 #include <list>
 #include <memory>
