@@ -7,3 +7,8 @@
 
 # OS cruft
 .DS_Store
+
+# Local session continuity note (not project docs, not for the repo)
+SESSION_NOTES.md
+
+CMakeUserPresets.json

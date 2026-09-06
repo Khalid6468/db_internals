@@ -1,0 +1,187 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 21,
+      "patch": 0
+    },
+    "configurePresets": [
+      {
+        "name": "base",
+        "hidden": true,
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/build/${presetName}",
+        "cacheVariables": {
+          "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+          "BUILD_SHARED_LIBS": false,
+          "TINYDB_SANITIZER": "none",
+          "TINYDB_ENABLE_PROFILING": false
+        },
+        "environment": {
+          "ZERO_AR_DATE": "1"
+        }
+      },
+      {
+        "name": "debug",
+        "inherits": "base",
+        "displayName": "TinyDB Debug",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug"
+        }
+      },
+      {
+        "name": "release",
+        "inherits": "base",
+        "displayName": "TinyDB Release",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release"
+        }
+      },
+      {
+        "name": "profile",
+        "inherits": "base",
+        "displayName": "TinyDB Profile",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "TINYDB_ENABLE_PROFILING": true
+        }
+      },
+      {
+        "name": "ubsan",
+        "inherits": "base",
+        "displayName": "TinyDB UBSan",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "TINYDB_SANITIZER": "undefined"
+        }
+      },
+      {
+        "name": "linux-asan-ubsan",
+        "inherits": "base",
+        "displayName": "TinyDB Linux ASan + UBSan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        },
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "TINYDB_SANITIZER": "address-undefined"
+        }
+      },
+      {
+        "name": "linux-tsan",
+        "inherits": "base",
+        "displayName": "TinyDB Linux TSan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        },
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "TINYDB_SANITIZER": "thread"
+        }
+      }
+    ],
+    "buildPresets": [
+      {
+        "name": "debug",
+        "configurePreset": "debug"
+      },
+      {
+        "name": "release",
+        "configurePreset": "release"
+      },
+      {
+        "name": "profile",
+        "configurePreset": "profile"
+      },
+      {
+        "name": "ubsan",
+        "configurePreset": "ubsan"
+      },
+      {
+        "name": "linux-asan-ubsan",
+        "configurePreset": "linux-asan-ubsan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        }
+      },
+      {
+        "name": "linux-tsan",
+        "configurePreset": "linux-tsan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        }
+      }
+    ],
+    "testPresets": [
+      {
+        "name": "test-base",
+        "hidden": true,
+        "output": {
+          "outputOnFailure": true,
+          "shortProgress": true
+        },
+        "execution": {
+          "noTestsAction": "error",
+          "stopOnFailure": true
+        }
+      },
+      {
+        "name": "debug",
+        "inherits": "test-base",
+        "configurePreset": "debug"
+      },
+      {
+        "name": "release",
+        "inherits": "test-base",
+        "configurePreset": "release"
+      },
+      {
+        "name": "profile",
+        "inherits": "test-base",
+        "configurePreset": "profile"
+      },
+      {
+        "name": "ubsan",
+        "inherits": "test-base",
+        "configurePreset": "ubsan",
+        "environment": {
+          "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+        }
+      },
+      {
+        "name": "linux-asan-ubsan",
+        "inherits": "test-base",
+        "configurePreset": "linux-asan-ubsan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        },
+        "environment": {
+          "ASAN_OPTIONS": "halt_on_error=1",
+          "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+        }
+      },
+      {
+        "name": "linux-tsan",
+        "inherits": "test-base",
+        "configurePreset": "linux-tsan",
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Linux"
+        },
+        "environment": {
+          "TSAN_OPTIONS": "halt_on_error=1"
+        }
+      }
+    ]
+  }
